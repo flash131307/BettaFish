@@ -1,517 +1,1865 @@
-# 🐟 BettaFish（微舆）项目学习指南
+# 🐟 BettaFish 多智能体协作系统深度学习指南
 
-> **作者的话**：这是一份为你量身定制的学习路线图，帮助你从零开始理解这个创新的多智能体舆情分析系统。
-> **学习方式**：先通读大纲，确认后我们逐部分深入学习！
-
----
-
-## 📚 学习路线总览
-
-```
-第一阶段：认识项目（基础认知）
-    ↓
-第二阶段：理解核心概念（理论基础）
-    ↓
-第三阶段：探索系统架构（宏观设计）
-    ↓
-第四阶段：深入四大 Agent（核心功能）
-    ↓
-第五阶段：学习关键技术（技术细节）
-    ↓
-第六阶段：实战与扩展（动手实践）
-```
+> **学习重点**：⭐ **多智能体协作机制** | ⭐ **四大Agent内部设计** | ⭐ **论坛协作实现**
+> **简化内容**：🔹 LLM技术（附录） | 🔹 爬虫技术（附录）
 
 ---
 
-## 🎯 第一阶段：认识项目（基础认知）
-**学习目标**：从宏观视角了解"微舆"是什么，能做什么
+## 📚 学习路线
 
-### 1.1 项目概述
-- **是什么**：多智能体舆情分析系统
-- **比喻理解**：像一个"AI情报分析团队"
-  - 有专门搜索网络的情报员（QueryEngine）
-  - 有分析图片视频的多媒体专家（MediaEngine）
-  - 有挖掘数据库的数据分析师（InsightEngine）
-  - 有撰写报告的文案专家（ReportEngine）
-  - 还有一个主持人协调所有人讨论（ForumEngine）
+```
+第一阶段：项目全景认知 （1天）
+    ├─ 多智能体系统是什么
+    └─ BettaFish的核心价值
+         ↓
+第二阶段：多智能体理论与架构 （2-3天）⭐
+    ├─ Agent的本质与设计模式
+    ├─ 协作模式对比
+    └─ 四个Agent的职责划分
+         ↓
+第三阶段：论坛协作机制深度解析 （3-4天）⭐
+    ├─ 为什么需要论坛机制
+    ├─ 实现原理（基于日志文件）
+    ├─ 代码逐行剖析（ForumEngine/monitor.py）
+    └─ 主持人LLM的作用
+         ↓
+第四阶段：InsightEngine深度剖析 （4-5天）⭐
+    ├─ 内部架构与工具箱
+    ├─ Node节点设计模式
+    ├─ 关键代码解析（agent.py）
+    └─ 工作流程实战
+         ↓
+第五阶段：其他三个Agent解析 （各2天）⭐
+    ├─ QueryEngine（网络搜索）
+    ├─ MediaEngine（多模态分析）
+    └─ ReportEngine（报告生成）
+         ↓
+第六阶段：完整协作流程实战 （2-3天）
+    └─ 从用户提问到报告生成全流程
+```
 
-### 1.2 核心价值
-- **六大优势**：
-  1. AI驱动的全域监控（7x24小时爬虫）
-  2. 超越LLM的复合分析引擎（多Agent协作）
-  3. 强大的多模态能力（图文视频都能分析）
-  4. Agent"论坛"协作机制（避免思维局限）
-  5. 公私域数据无缝融合（内外部数据打通）
-  6. 轻量化与高扩展性（纯Python模块化）
-
-### 1.3 应用场景
-- 品牌声誉监测
-- 社会热点事件分析
-- 市场趋势预测
-- 竞品分析
+**总计学习时间**：约 18-22 天
 
 ---
 
-## 🧠 第二阶段：理解核心概念（理论基础）
-**学习目标**：掌握项目涉及的关键技术概念
+## 🎯 第一阶段：项目全景认知
 
-### 2.1 什么是"多智能体系统"（Multi-Agent System）
-**大白话**：就像一个团队分工合作，每个人有自己的专业技能和工具
+### 1.1 BettaFish是什么？
 
-**专业定义**：
-- **Agent（智能体）**：能够感知环境、自主决策、执行任务的软件实体
-- **Multi-Agent**：多个Agent相互协作，完成单个Agent无法完成的复杂任务
+**一句话定义**：一个基于**多智能体协作**的舆情分析系统，通过4个专业AI Agent的分工合作，自动完成复杂的舆情分析任务。
 
-**本项目的四个Agent**：
-| Agent | 职责 | 类比 |
-|-------|------|------|
-| QueryEngine | 网络搜索 | 情报搜索员 |
-| MediaEngine | 多模态分析 | 多媒体专家 |
-| InsightEngine | 数据库挖掘 | 数据分析师 |
-| ReportEngine | 报告生成 | 文案撰写员 |
+#### 核心类比：AI情报分析团队
 
-### 2.2 什么是"论坛协作机制"（Forum Collaboration）
-**大白话**：让AI们像开会一样讨论问题
+想象一个情报分析团队在分析某个事件：
 
-**工作原理**：
-1. 各Agent独立工作，记录自己的发现
-2. ForumEngine（主持人）监控所有Agent的发言
-3. 生成总结，引导下一轮讨论方向
-4. 各Agent读取论坛内容，调整研究方向
-5. 多轮迭代，直到得出结论
-
-### 2.3 什么是"LLM"（大语言模型）
-**大白话**：就是像ChatGPT那样能理解和生成文字的AI
-
-**本项目使用**：
-- OpenAI兼容接口（统一标准）
-- 支持多种模型：Kimi、Gemini、DeepSeek、Qwen等
-
-### 2.4 什么是"爬虫"（Web Crawler）
-**大白话**：自动化程序，能够模拟人类浏览网页，批量收集数据
-
-**本项目的爬虫**：
-- **MindSpider**：专门爬取微博、小红书、抖音等社交媒体数据
-- 使用Playwright（能执行JavaScript的高级爬虫工具）
-
----
-
-## 🏗️ 第三阶段：探索系统架构（宏观设计）
-**学习目标**：理解系统如何组织、各部分如何协作
-
-### 3.1 整体架构图解读
 ```
-用户提问（Web界面）
-    ↓
-Flask主应用（app.py）
-    ↓
-并行启动三个Agent
-    ├─→ QueryEngine（网络搜索）
-    ├─→ MediaEngine（多模态分析）
-    └─→ InsightEngine（数据库挖掘）
-    ↓
-循环阶段：论坛协作 + 深度研究
-    ├─→ ForumEngine监控并生成总结
-    ├─→ 各Agent根据论坛引导深入研究
-    └─→ 多轮迭代
-    ↓
-ReportEngine收集结果
-    ↓
-生成最终HTML报告
+传统人类团队                      BettaFish AI团队
+─────────────────              ───────────────────
+👤 网络搜索员              →    QueryEngine
+   职责：搜索新闻、社交媒体             职责：调用搜索API获取网络信息
+   工具：Google、微博搜索               工具：Tavily API、Bocha API
+
+👤 多媒体专家              →    MediaEngine
+   职责：分析图片、视频内容             职责：解析多模态数据
+   工具：Photoshop、视频编辑器          工具：多模态LLM（Gemini）
+
+👤 数据分析师              →    InsightEngine
+   职责：挖掘数据库深度信息             职责：SQL查询、情感分析
+   工具：Excel、SQL、统计软件           工具：数据库查询工具、情感分析模型
+
+👤 报告撰写员              →    ReportEngine
+   职责：整合信息，撰写报告             职责：收集结果，生成HTML报告
+   工具：Word、PPT                     工具：模板引擎、Markdown转HTML
+
+🎙️ 团队主持人              →    ForumEngine
+   职责：协调讨论，引导方向             职责：监控Agent日志，生成总结
+   工具：会议记录、白板                 工具：日志监控、主持人LLM
 ```
 
-### 3.2 完整分析流程（12步）
-| 步骤 | 阶段名称 | 主要操作 |
-|------|----------|----------|
-| 1 | 用户提问 | 在Web界面输入分析需求 |
-| 2 | 并行启动 | 三个Agent同时开始工作 |
-| 3 | 初步分析 | 各Agent用专属工具概览搜索 |
-| 4 | 策略制定 | 基于初步结果制定分块研究策略 |
-| 5-N | **循环阶段** | **论坛协作 + 深度研究（多轮）** |
-| N+1 | 结果整合 | ReportEngine收集所有分析结果 |
-| N+2 | 报告生成 | 动态选择模板生成HTML报告 |
+### 1.2 为什么需要多Agent？
 
-### 3.3 项目代码结构
+#### 单Agent（单个LLM）的局限性
+
 ```
-BettaFish/
-├── app.py                         # 【核心入口】Flask主应用
-├── config.py                      # 【全局配置】统一管理所有配置
-│
-├── QueryEngine/                   # 【Agent 1】网络搜索引擎
-│   ├── agent.py                   # Agent主逻辑
-│   ├── tools/                     # 搜索工具（Tavily、Bocha等）
-│   └── llms/                      # LLM接口封装
-│
-├── MediaEngine/                   # 【Agent 2】多模态分析引擎
-│   ├── agent.py                   # Agent主逻辑
-│   └── tools/                     # 多模态工具（图片、视频分析）
-│
-├── InsightEngine/                 # 【Agent 3】数据库挖掘引擎
-│   ├── agent.py                   # Agent主逻辑
-│   ├── tools/                     # 数据库查询工具
-│   │   ├── search.py              # 核心搜索工具
-│   │   ├── sentiment_analyzer.py  # 情感分析
-│   │   └── keyword_optimizer.py   # 关键词优化
-│   └── prompts/                   # 提示词模板
-│
-├── ReportEngine/                  # 【Agent 4】报告生成引擎
-│   ├── agent.py                   # Agent主逻辑
-│   ├── report_template/           # 报告模板库
-│   └── nodes/                     # 报告生成节点
-│
-├── ForumEngine/                   # 【协作引擎】论坛机制
-│   ├── monitor.py                 # 监控Agent发言
-│   └── llm_host.py                # 主持人LLM模块
-│
-├── MindSpider/                    # 【爬虫系统】数据采集
-│   ├── BroadTopicExtraction/      # 热点话题提取
-│   └── DeepSentimentCrawling/     # 深度舆情爬取
-│
-├── SentimentAnalysisModel/        # 【情感分析模型】
-│   ├── WeiboMultilingualSentiment/  # 多语言情感分析
-│   └── WeiboSentiment_SmallQwen/    # 小参数Qwen微调
-│
-└── utils/                         # 【通用工具】
-    ├── forum_reader.py            # Agent间通信
-    └── retry_helper.py            # 网络重试机制
+┌────────────────────────────────────┐
+│      单个LLM的"能力边界"            │
+├────────────────────────────────────┤
+│ ❌ 无法访问实时网络数据             │
+│ ❌ 无法查询数据库                  │
+│ ❌ 无法理解图片、视频               │
+│ ❌ 知识截止日期限制                 │
+│ ❌ 容易产生"思维茧房"              │
+│ ❌ 无法并行处理多个任务             │
+└────────────────────────────────────┘
+```
+
+#### 多Agent协作的优势
+
+| 维度 | 单Agent | 多Agent协作 | BettaFish的实现 |
+|------|---------|------------|---------------|
+| **能力范围** | 仅限LLM推理 | 每个Agent有专业工具 | 4个Agent覆盖搜索、多模态、数据库、报告生成 |
+| **信息来源** | 训练数据 | 网络+数据库+多模态 | 整合30+社交媒体+私有数据库 |
+| **处理效率** | 串行执行 | 并行处理 | 三个Agent同时启动工作 |
+| **视角多元性** | 单一视角 | 多元交叉验证 | 论坛机制让Agent互相启发 |
+| **结果质量** | 易片面 | 综合融合 | ReportEngine整合所有发现 |
+
+### 1.3 BettaFish的核心价值
+
+**三板斧**：输入需求 → 详细分析 → 趋势预测（开发中）
+
+```
+【输入】用户在Web界面提出分析需求
+  例如："分析武汉大学品牌声誉"
+      ↓
+【分析】三个Agent并行工作 + 论坛协作
+  ├─ QueryEngine: 搜索全网新闻、社交媒体讨论
+  ├─ MediaEngine: 分析相关图片、视频内容
+  └─ InsightEngine: 查询数据库历史数据、情感分析
+      ↓
+  ForumEngine: 监控所有Agent发言，引导深度研究
+      ↓
+【报告】ReportEngine生成专业HTML报告
+  包含：热点话题、舆情走向、情感分析、关键事件
+      ↓
+【预测】（开发中）基于时序模型预测未来趋势
 ```
 
 ---
 
-## 🤖 第四阶段：深入四大 Agent（核心功能）
-**学习目标**：理解每个Agent的工作原理和代码实现
+## 🧠 第二阶段：多智能体理论与架构（⭐ 重点）
 
-### 4.1 QueryEngine（网络搜索Agent）
-**职责**：在国内外网络上搜索相关信息
+### 2.1 什么是Agent（智能体）？
 
-**工具箱**：
-- Tavily API（国际搜索）
-- Bocha API（国内搜索）
-- 网页内容提取工具
+#### 大白话解释
 
-**工作流程**：
-1. 接收搜索任务
-2. 生成搜索关键词
-3. 调用搜索API
-4. 提取和清洗内容
-5. 反思和优化（最多2轮）
+**Agent = 大脑（LLM） + 工具（Tools） + 自主决策能力**
 
-**关键代码位置**：
-- `QueryEngine/agent.py` - Agent主逻辑
-- `QueryEngine/tools/` - 搜索工具实现
-- `QueryEngine/nodes/` - 各个处理节点
+类比：一个装修工人
+- **大脑**（LLM）：理解需求"我要装修客厅"
+- **工具**（Tools）：电钻、锤子、卷尺
+- **自主决策**：先测量→选择工具→执行→检查质量
 
-### 4.2 MediaEngine（多模态分析Agent）
-**职责**：分析图片、视频等多媒体内容
+#### 专业定义：PRAR循环
 
-**能力**：
-- 图片OCR文字提取
-- 视频关键帧分析
-- 结构化信息卡片提取（天气、日历、股票等）
+Agent的工作遵循**PRAR循环**：
 
-**工作流程**：
-1. 识别内容类型（文本/图片/视频）
-2. 调用多模态LLM（如Gemini）
-3. 提取关键信息
-4. 结构化存储
+```
+┌─────────────────────────────────────┐
+│        Agent 的 PRAR 循环            │
+├─────────────────────────────────────┤
+│                                     │
+│  1. Perceive  (感知)                │
+│     ↓ 接收用户查询/读取环境信息      │
+│                                     │
+│  2. Reason    (推理)                │
+│     ↓ LLM理解任务,制定策略           │
+│                                     │
+│  3. Act       (行动)                │
+│     ↓ 调用工具执行任务               │
+│                                     │
+│  4. Reflect   (反思)                │
+│     ↓ 评估结果,决定是否重试          │
+│     │                               │
+│     └──→ (循环回到第1步)            │
+│                                     │
+└─────────────────────────────────────┘
+```
 
-**关键代码位置**：
-- `MediaEngine/agent.py` - Agent主逻辑
-- `MediaEngine/tools/` - 多模态工具
+#### BettaFish中Agent的通用结构
 
-### 4.3 InsightEngine（数据库挖掘Agent）
-**职责**：从私有舆情数据库中挖掘深度信息
-
-**工具箱**：
-- `search_hot_content()` - 搜索热榜内容
-- `search_topic_globally()` - 全局话题搜索
-- `get_comments_for_topic()` - 获取话题评论
-- `search_topic_on_platform()` - 特定平台搜索
-- `sentiment_analyzer` - 情感分析工具
-- `keyword_optimizer` - 关键词优化（Qwen模型）
-
-**工作流程**：
-1. 理解用户需求，制定搜索策略
-2. 使用多种工具从数据库查询
-3. 情感分析（调用微调模型）
-4. 关键词优化（提高搜索精度）
-5. 总结和反思
-
-**关键代码位置**：
-- `InsightEngine/agent.py` - Agent主逻辑
-- `InsightEngine/tools/search.py` - 数据库查询
-- `InsightEngine/tools/sentiment_analyzer.py` - 情感分析
-- `InsightEngine/tools/keyword_optimizer.py` - 关键词优化
-
-### 4.4 ReportEngine（报告生成Agent）
-**职责**：收集所有Agent的结果，生成专业报告
-
-**能力**：
-- 模板选择（根据场景自动选择）
-- 多轮生成（保证质量）
-- HTML美化
-
-**报告模板类型**：
-- 社会公共热点事件分析
-- 商业品牌舆情监测
-- 政府政策影响评估
-- （更多模板...）
-
-**工作流程**：
-1. 收集三个Agent的分析结果
-2. 读取论坛讨论记录
-3. 选择合适的报告模板
-4. 多轮生成和优化
-5. 输出HTML报告
-
-**关键代码位置**：
-- `ReportEngine/agent.py` - Agent主逻辑
-- `ReportEngine/report_template/` - 模板库
-- `ReportEngine/nodes/` - 报告生成节点
-
----
-
-## 🔧 第五阶段：学习关键技术（技术细节）
-**学习目标**：掌握项目中的关键技术实现
-
-### 5.1 LLM统一接口封装
-**问题**：不同LLM厂商API格式不统一，如何管理？
-
-**解决方案**：OpenAI兼容接口
 ```python
-# 所有Agent的LLM调用都使用这种统一格式
-from openai import OpenAI
+# 伪代码：展示Agent的核心组成
+class Agent:
+    def __init__(self):
+        self.llm_client = LLM()        # 大脑（大语言模型）
+        self.tools = ToolBox()         # 工具箱（专业能力）
+        self.nodes = NodePipeline()    # 节点流水线（处理流程）
+        self.state = State()           # 状态管理
 
-client = OpenAI(
-    api_key="your_api_key",
-    base_url="https://api.example.com/v1"
-)
+    def run(self, user_query):
+        # 1. Perceive: 感知输入
+        task = self.understand_query(user_query)
 
-response = client.chat.completions.create(
-    model="model-name",
-    messages=[{"role": "user", "content": "your prompt"}]
-)
+        # 2. Reason: 推理决策
+        plan = self.llm_client.make_plan(task)
+
+        # 3. Act: 执行行动
+        results = self.execute_plan(plan)
+
+        # 4. Reflect: 反思优化
+        if not self.is_good_enough(results):
+            return self.run(user_query)  # 重新执行
+
+        return results
 ```
 
-**配置文件**（`config.py`）：
-- 每个Agent有独立的API配置
-- 支持环境变量和.env文件
+### 2.2 BettaFish的四个Agent详解
 
-### 5.2 数据库设计与查询优化
-**数据库选择**：PostgreSQL（推荐）或MySQL
+#### 职责划分原则：按信息来源和处理能力
 
-**核心表结构**：
-- 热榜内容表（hot_content）
-- 话题表（topics）
-- 评论表（comments）
-- 平台数据表（platform_data）
+```
+┌─────────────────────────────────────────────────────┐
+│             四个Agent的职责矩阵                       │
+├────────────┬──────────────┬──────────────┬─────────┤
+│ Agent      │ 信息来源     │ 核心能力     │ 关键工具 │
+├────────────┼──────────────┼──────────────┼─────────┤
+│QueryEngine │ 互联网公开   │ 网络搜索     │Tavily   │
+│            │ 信息         │ 内容提取     │Bocha API│
+├────────────┼──────────────┼──────────────┼─────────┤
+│MediaEngine │ 图片、视频   │ 视觉理解     │Gemini   │
+│            │ 等多模态内容 │ OCR提取      │多模态LLM│
+├────────────┼──────────────┼──────────────┼─────────┤
+│Insight     │ 私有数据库   │ 数据挖掘     │SQL查询  │
+│Engine      │ (舆情数据)   │ 情感分析     │情感模型 │
+├────────────┼──────────────┼──────────────┼─────────┤
+│Report      │ 其他Agent的  │ 内容整合     │模板引擎 │
+│Engine      │ 分析结果     │ 报告生成     │Markdown │
+└────────────┴──────────────┴──────────────┴─────────┘
+```
 
-**查询优化技术**：
-- 索引优化
-- 连接池管理（SQLAlchemy）
-- 异步查询（aiomysql/asyncpg）
-- 分批查询（避免内存溢出）
+#### Agent间的信息流动
 
-### 5.3 情感分析技术
-**多种方法对比**：
-| 方法 | 优点 | 缺点 | 适用场景 |
-|------|------|------|----------|
-| BERT微调 | 准确度高 | 速度较慢 | 高精度需求 |
-| Qwen微调 | 中文理解好 | 模型较大 | 中文为主场景 |
-| 多语言模型 | 支持多语言 | 通用性强但不够精准 | 国际化场景 |
-| 机器学习（SVM/XGBoost） | 速度快 | 准确度一般 | 实时性要求高 |
+```
+用户提问："分析武汉大学品牌声誉"
+         ↓
+   ┌─────┴─────┐
+   │  Flask    │  主应用分发任务
+   │  app.py   │
+   └───┬───┬───┬──┘
+       │   │   │
+   ┌───┴┐ ┌┴──┐┌┴───┐
+   │Query││Media││Insight│  三个Agent并行启动
+   │Engine││Engine││Engine│
+   └───┬┘ └┬──┘└┬───┘
+       │   │   │
+       │   │   │  各自使用专业工具搜索
+       │   │   │
+       ↓   ↓   ↓
+    ┌──────────────┐
+    │ ForumEngine  │  监控日志,协调讨论
+    │  (监控+主持)  │
+    └──────────────┘
+         ↓
+    【论坛总结】
+    "QueryEngine发现:樱花季是热点"
+    "MediaEngine发现:大量视频提到樱花"
+    "InsightEngine发现:讨论量增长300%"
+         ↓
+    各Agent读取论坛,调整策略
+         ↓
+    深度研究（多轮迭代）
+         ↓
+    ┌──────────────┐
+    │ReportEngine  │  收集所有结果
+    └──────────────┘
+         ↓
+    生成HTML报告
+```
 
-**本项目默认**：多语言情感分析模型（推荐）
+### 2.3 多智能体协作模式对比
 
-### 5.4 爬虫技术（MindSpider）
-**技术栈**：
-- Playwright（支持JavaScript渲染）
-- 反爬虫策略（User-Agent、代理、限速）
-- 数据清洗（BeautifulSoup、正则表达式）
+#### 三种经典模式
 
-**两大模块**：
-1. **BroadTopicExtraction**：热点话题提取
-   - 获取今日新闻
-   - 提取关键词
-   - 存入数据库
+**1. 串行模式（Sequential）**
+```
+Agent A → Agent B → Agent C
+  └─ 优点：逻辑清晰,易于调试
+  └─ 缺点：速度慢,A慢则全慢
+  └─ BettaFish采用：❌ 不采用
+```
 
-2. **DeepSentimentCrawling**：深度舆情爬取
-   - 根据关键词爬取各平台内容
-   - 支持微博、小红书、抖音、快手
-   - 爬取评论数据
+**2. 并行模式（Parallel）**
+```
+     ┌─ Agent A ─┐
+任务 ─┼─ Agent B ─┼→ 结果汇总
+     └─ Agent C ─┘
+  └─ 优点：速度快
+  └─ 缺点：各Agent独立,无协作
+  └─ BettaFish采用：⚠️ 仅在初期使用
+```
 
-### 5.5 论坛协作机制（ForumEngine）
-**核心思想**：通过日志文件实现Agent间通信
+**3. 协作模式（Collaborative）**
+```
+并行启动
+  │
+  ├─ Agent A ─┐
+  ├─ Agent B ─┼→ 论坛交流 → Agent读取 → 调整策略
+  └─ Agent C ─┘     ↑            ↓
+                   └────循环迭代────┘
+  └─ 优点：速度快且有协同,结果质量高
+  └─ 缺点：实现复杂
+  └─ BettaFish采用：✅ 核心模式
+```
 
-**实现方式**：
-1. 每个Agent将发现写入日志
-2. ForumEngine监控日志文件
-3. 提取关键信息，调用LLM生成总结
-4. 各Agent通过`forum_reader.py`读取论坛内容
-5. 根据论坛引导调整研究方向
+#### BettaFish的混合协作模式
 
-**关键文件**：
-- `ForumEngine/monitor.py` - 日志监控
-- `ForumEngine/llm_host.py` - 主持人LLM
-- `utils/forum_reader.py` - 论坛读取工具
+```
+【阶段1：并行启动】（0-2分钟）
+   三个Agent同时开始工作,各自进行初步搜索
+         ↓
+【阶段2：论坛协作】（2-10分钟,多轮迭代）
+   ┌─────────────────────────────┐
+   │  循环迭代（3-5轮）           │
+   │                             │
+   │  Agent工作 → 写日志          │
+   │     ↓                       │
+   │  ForumEngine监控 → 生成总结  │
+   │     ↓                       │
+   │  Agent读取论坛 → 调整策略    │
+   │     ↓                       │
+   │  深度研究 ────┘              │
+   └─────────────────────────────┘
+         ↓
+【阶段3：结果融合】（10-12分钟）
+   ReportEngine收集所有结果 → 生成报告
+```
+
+### 2.4 完整协作流程（12步详解）
+
+| 步骤 | 阶段 | 主要操作 | 涉及文件 | 关键代码位置 |
+|------|------|---------|---------|------------|
+| **1** | 用户提问 | Flask接收Web请求 | `app.py` | `@app.route('/')` |
+| **2** | 任务分发 | 主应用并行启动3个Agent | `app.py` | `subprocess.Popen()` |
+| **3** | 初步搜索 | 各Agent用工具概览性搜索 | `*/agent.py` | `execute_search_tool()` |
+| **4** | 策略制定 | 基于初步结果制定深入策略 | `*/nodes/` | `ReportStructureNode` |
+| **5** | 论坛启动 | ForumEngine开始监控日志 | `ForumEngine/monitor.py` | `LogMonitor.start()` |
+| **6** | 深度研究(R1) | Agent执行深入搜索,记录发现 | `*/nodes/search_node.py` | `FirstSearchNode.run()` |
+| **7** | 论坛总结(R1) | 主持人LLM分析发言,生成总结 | `ForumEngine/llm_host.py` | `generate_host_speech()` |
+| **8** | 交流融合(R1) | Agent读取论坛,调整方向 | `utils/forum_reader.py` | `read_forum_summary()` |
+| **9-N** | **循环迭代** | 重复6-8步,3-5轮 | - | **迭代机制** |
+| **N+1** | 结果收集 | ReportEngine收集所有结果 | `ReportEngine/agent.py` | `collect_results()` |
+| **N+2** | 模板选择 | 根据任务类型选择模板 | `ReportEngine/nodes/` | `TemplateSelectionNode` |
+| **N+3** | 报告生成 | 生成HTML报告 | `ReportEngine/nodes/` | `HtmlGenerationNode` |
 
 ---
 
-## 💻 第六阶段：实战与扩展（动手实践）
-**学习目标**：动手运行项目，尝试扩展功能
+## 🎙️ 第三阶段：论坛协作机制深度解析（⭐ 核心重点）
 
-### 6.1 环境搭建实战
-**任务清单**：
-- [ ] 安装Python 3.9+
-- [ ] 创建虚拟环境（Conda或venv）
-- [ ] 安装依赖包（`pip install -r requirements.txt`）
-- [ ] 安装Playwright浏览器驱动
-- [ ] 配置数据库（PostgreSQL/MySQL）
-- [ ] 配置LLM API密钥（.env文件）
-- [ ] 运行测试（`python app.py`）
+### 3.1 论坛机制的设计动机
 
-### 6.2 运行第一个完整分析
-**步骤**：
-1. 启动主应用：`python app.py`
-2. 访问：http://localhost:5000
-3. 输入分析需求：例如"分析武汉大学品牌声誉"
-4. 观察各Agent工作日志
-5. 查看最终生成的HTML报告（`final_reports/`目录）
+#### 问题场景：如果没有协作会怎样？
 
-### 6.3 单独测试某个Agent
-**示例：测试InsightEngine**
-```bash
-streamlit run SingleEngineApp/insight_engine_streamlit_app.py --server.port 8501
+**场景1：重复劳动**
+```
+QueryEngine:  我搜索了"武汉大学排名"，发现排名上升
+InsightEngine: 我也在数据库查询了"武汉大学排名"...
+              ❌ 重复工作，浪费资源！
 ```
 
-### 6.4 扩展实战：接入自定义数据源
-**场景**：你有一个客户反馈数据库，想接入系统
+**场景2：信息孤岛**
+```
+MediaEngine:   我发现视频里"樱花季"是热点
+QueryEngine:   （不知道这个发现）继续搜索其他关键词
+               ❌ 错失关键线索，分析不深入！
+```
 
-**步骤**：
-1. 在`config.py`添加数据库配置
-2. 创建自定义工具类（参考`InsightEngine/tools/search.py`）
-3. 在`InsightEngine/agent.py`中集成工具
-4. 修改Prompt，让Agent知道新工具的用法
-5. 测试运行
+**场景3：缺乏整体视角**
+```
+各Agent独立工作，像"盲人摸象"
+Query看到网络热度，Media看到视频内容，Insight看到历史数据
+但没有人把三者联系起来
+❌ 分析片面，缺乏综合视角！
+```
 
-### 6.5 扩展实战：自定义报告模板
-**步骤**：
-1. 在`ReportEngine/report_template/`创建新模板
-2. 使用Markdown格式编写
-3. 在Web界面上传并选择
-4. 生成报告
+#### 解决方案：论坛协作机制
 
-### 6.6 爬虫实战：爬取微博数据
-**步骤**：
+**核心思想**：模拟人类团队开会讨论
+
+```
+┌────────────────────────────────────────┐
+│      人类团队会议  vs  Agent论坛        │
+├────────────────────────────────────────┤
+│ 1. 成员发言自己的发现                   │
+│    → Agent写日志记录发现                │
+│                                        │
+│ 2. 主持人总结要点                       │
+│    → ForumEngine生成总结                │
+│                                        │
+│ 3. 成员听取他人观点                     │
+│    → Agent读取论坛内容                  │
+│                                        │
+│ 4. 调整下一步计划                       │
+│    → Agent调整研究策略                  │
+│                                        │
+│ 5. 多轮讨论深化                         │
+│    → 迭代3-5轮优化                      │
+└────────────────────────────────────────┘
+```
+
+### 3.2 论坛机制的技术实现
+
+#### 架构总览
+
+```
+┌───────────────────────────────────────────────────┐
+│           论坛协作机制技术架构                      │
+└───────────────────────────────────────────────────┘
+
+【层级1：发言层】Agent日志文件
+├─ logs/query.log       ← QueryEngine的工作日志
+├─ logs/media.log       ← MediaEngine的工作日志
+└─ logs/insight.log     ← InsightEngine的工作日志
+
+      每个Agent在关键发现时写入：
+      logger.info("【论坛发言】我发现了...")
+            ↓
+【层级2：监控层】ForumEngine实时监控
+├─ ForumEngine/monitor.py
+│     ├─ LogMonitor类
+│     │    ├─ 每5秒扫描一次日志文件
+│     │    ├─ 记录每个文件的读取位置（file_positions）
+│     │    └─ 提取包含"SummaryNode"的内容
+│     │
+│     └─ 提取到新发言后 →
+            ↓
+【层级3：分析层】主持人LLM分析
+├─ ForumEngine/llm_host.py
+│     ├─ generate_host_speech()函数
+│     │    ├─ 接收所有Agent的发言
+│     │    ├─ 调用LLM（Qwen3-235B）分析
+│     │    └─ 生成引导性总结
+│     │
+│     └─ 输出格式：
+│         【重要发现】...
+│         【关联分析】...
+│         【研究建议】...
+            ↓
+【层级4：共享层】论坛总结文件
+├─ logs/forum.log
+│     └─ 存储主持人的总结
+│     └─ 包含时间戳、发言来源、总结内容
+            ↓
+【层级5：读取层】Agent读取论坛
+├─ utils/forum_reader.py
+│     └─ read_forum_summary()函数
+│          └─ 各Agent调用此函数获取论坛内容
+            ↓
+【层级6：反馈层】Agent调整策略
+└─ 各Agent将论坛内容加入LLM上下文
+   └─ 根据论坛建议调整下一轮搜索方向
+```
+
+### 3.3 代码逐行剖析：`ForumEngine/monitor.py`
+
+#### 核心类：LogMonitor
+
+**作用**：实时监控三个Agent的日志文件，提取重要发言
+
+```python
+# 文件：ForumEngine/monitor.py（简化版）
+
+class LogMonitor:
+    """基于文件变化的智能日志监控器"""
+
+    def __init__(self, log_dir: str = "logs"):
+        """初始化监控器"""
+        self.log_dir = Path(log_dir)
+        self.forum_log_file = self.log_dir / "forum.log"  # 论坛总结文件
+
+        # 要监控的三个Agent日志
+        self.monitored_logs = {
+            'insight': self.log_dir / 'insight.log',
+            'media': self.log_dir / 'media.log',
+            'query': self.log_dir / 'query.log'
+        }
+
+        # 监控状态
+        self.file_positions = {}        # 记录每个文件的读取位置
+        self.agent_speeches_buffer = [] # Agent发言缓冲区
+        self.host_speech_threshold = 5  # 每5条发言触发一次主持人
+
+        # 目标节点识别模式（关键！）
+        self.target_node_patterns = [
+            'FirstSummaryNode',       # 首次总结节点
+            'ReflectionSummaryNode',  # 反思总结节点
+            'nodes.summary_node',     # 模块路径
+            '正在生成首次段落总结',   # 标识文本
+            '正在生成反思总结',
+        ]
+```
+
+**关键点1：为什么监控SummaryNode？**
+```
+因为SummaryNode是Agent对搜索结果的总结，
+代表了Agent的"核心发现"，最有价值！
+
+Agent工作流程：
+SearchNode → 执行搜索 → 获得大量原始数据
+     ↓
+SummaryNode → 总结关键信息 ← 🎯 这里是重点！
+     ↓
+写入日志 → ForumEngine监控到
+```
+
+#### 核心方法1：start_monitoring()
+
+**作用**：启动监控线程，持续扫描日志
+
+```python
+def start_monitoring(self):
+    """启动监控（在后台线程运行）"""
+    if self.is_monitoring:
+        logger.warning("ForumEngine: 监控已在运行")
+        return
+
+    self.is_monitoring = True
+    self.clear_forum_log()  # 清空旧的论坛日志
+
+    # 创建后台线程运行监控
+    self.monitor_thread = threading.Thread(
+        target=self._monitor_loop,
+        daemon=True
+    )
+    self.monitor_thread.start()
+    logger.info("ForumEngine: 监控已启动")
+```
+
+**关键点2：为什么用后台线程？**
+```
+因为监控是持续性工作，不能阻塞主程序！
+
+主程序流程：
+app.py启动 → 启动ForumEngine监控 → 启动3个Agent
+                    ↓（后台运行）
+          ForumEngine持续监控日志
+                    ↓
+          发现新发言 → 生成总结 → 写入forum.log
+```
+
+#### 核心方法2：_monitor_loop()
+
+**作用**：监控主循环，每5秒扫描一次
+
+```python
+def _monitor_loop(self):
+    """监控主循环（在后台线程中运行）"""
+    while self.is_monitoring:
+        try:
+            # 检查每个Agent的日志文件
+            for app_name, log_file in self.monitored_logs.items():
+                if not log_file.exists():
+                    continue
+
+                # 读取新增内容
+                new_content = self._read_new_content(app_name, log_file)
+
+                if new_content:
+                    # 检查是否包含目标节点（SummaryNode）
+                    if self._contains_target_node(new_content):
+                        # 提取发言内容
+                        speech = self._extract_speech(app_name, new_content)
+
+                        # 添加到缓冲区
+                        self.agent_speeches_buffer.append(speech)
+
+                        # 检查是否达到阈值（5条发言）
+                        if len(self.agent_speeches_buffer) >= self.host_speech_threshold:
+                            # 调用主持人LLM生成总结
+                            self._generate_and_write_host_speech()
+                            # 清空缓冲区
+                            self.agent_speeches_buffer = []
+
+            # 等待5秒再次扫描
+            time.sleep(5)
+
+        except Exception as e:
+            logger.error(f"ForumEngine监控异常: {e}")
+            time.sleep(5)
+```
+
+**流程图解**：
+```
+【时间轴示意】
+
+T=0s   监控启动
+         ↓
+T=5s   第1次扫描
+         ├─ 读取insight.log新内容
+         ├─ 读取media.log新内容
+         └─ 读取query.log新内容
+         └─ 未发现SummaryNode → 无操作
+         ↓
+T=10s  第2次扫描
+         ├─ insight.log有新内容
+         │    └─ 发现"FirstSummaryNode"
+         │         └─ 提取发言 → 加入buffer[1/5]
+         └─ 其他无变化
+         ↓
+T=15s  第3次扫描
+         ├─ query.log有新内容
+         │    └─ 发现"FirstSummaryNode"
+         │         └─ 提取发言 → 加入buffer[2/5]
+         ↓
+         ...（继续扫描）...
+         ↓
+T=35s  第7次扫描
+         ├─ media.log有新内容
+         │    └─ 发现"ReflectionSummaryNode"
+         │         └─ 提取发言 → 加入buffer[5/5]
+         │
+         └─ buffer满5条！触发主持人LLM
+              ├─ 调用generate_host_speech()
+              ├─ LLM分析5条发言
+              ├─ 生成总结
+              └─ 写入forum.log
+              └─ 清空buffer
+```
+
+#### 核心方法3：_read_new_content()
+
+**作用**：只读取文件的新增内容（避免重复读取）
+
+```python
+def _read_new_content(self, app_name: str, log_file: Path) -> str:
+    """读取文件的新增内容"""
+    # 获取上次读取的位置
+    last_position = self.file_positions.get(app_name, 0)
+
+    with open(log_file, 'r', encoding='utf-8', errors='ignore') as f:
+        # 跳到上次读取的位置
+        f.seek(last_position)
+
+        # 读取新内容
+        new_content = f.read()
+
+        # 更新读取位置
+        current_position = f.tell()
+        self.file_positions[app_name] = current_position
+
+    return new_content
+```
+
+**关键点3：为什么要记录读取位置？**
+```
+如果不记录位置，每次都从头读取：
+  第1次扫描：读取100行
+  第2次扫描：又读取这100行 + 新增10行
+  第3次扫描：又读取这110行 + 新增5行
+  → ❌ 重复处理，浪费资源，可能重复触发主持人！
+
+使用file_positions记录：
+  第1次扫描：读取100行，记录位置=100
+  第2次扫描：从位置100开始，只读取新增10行，记录位置=110
+  第3次扫描：从位置110开始，只读取新增5行，记录位置=115
+  → ✅ 只处理新内容，高效准确！
+```
+
+#### 核心方法4：_contains_target_node()
+
+**作用**：判断日志内容是否包含目标节点（SummaryNode）
+
+```python
+def _contains_target_node(self, content: str) -> bool:
+    """检查内容是否包含目标节点"""
+    for pattern in self.target_node_patterns:
+        if pattern in content:
+            return True
+    return False
+```
+
+**target_node_patterns 详解**：
+```python
+self.target_node_patterns = [
+    # 方式1：类名匹配
+    'FirstSummaryNode',       # 首次总结节点
+    'ReflectionSummaryNode',  # 反思总结节点
+
+    # 方式2：模块路径匹配
+    'InsightEngine.nodes.summary_node',
+    'MediaEngine.nodes.summary_node',
+    'QueryEngine.nodes.summary_node',
+    'nodes.summary_node',  # 部分路径（兼容性）
+
+    # 方式3：标识文本匹配
+    '正在生成首次段落总结',
+    '正在生成反思总结',
+]
+
+# Agent日志示例：
+# 2025-01-15 10:30:45 | INFO | InsightEngine.nodes.summary_node:run:42 - 正在生成首次段落总结...
+#                                  ↑匹配成功↑                              ↑匹配成功↑
+```
+
+### 3.4 代码剖析：`ForumEngine/llm_host.py`
+
+#### 主持人LLM的作用
+
+**核心函数：generate_host_speech()**
+
+```python
+# 文件：ForumEngine/llm_host.py（简化版）
+
+from openai import OpenAI
+from config import settings
+
+def generate_host_speech(agent_speeches: List[str]) -> str:
+    """
+    主持人LLM分析Agent发言，生成引导性总结
+
+    Args:
+        agent_speeches: Agent发言列表
+                        例如：["QueryEngine: 我发现...", "MediaEngine: 我发现..."]
+
+    Returns:
+        主持人总结文本
+    """
+    # 初始化LLM客户端（使用Qwen3-235B）
+    client = OpenAI(
+        api_key=settings.FORUM_HOST_API_KEY,
+        base_url=settings.FORUM_HOST_BASE_URL
+    )
+
+    # 构建Prompt
+    prompt = f"""
+你是一个舆情分析团队的主持人。以下是各个研究员最近的发现：
+
+{chr(10).join(agent_speeches)}
+
+请你作为主持人：
+1. 总结各研究员的重要发现
+2. 分析这些发现之间的关联
+3. 指出还有哪些方向值得深入研究
+4. 给出下一步建议
+
+输出格式：
+【重要发现】
+...
+
+【关联分析】
+...
+
+【研究建议】
+...
+"""
+
+    # 调用LLM
+    response = client.chat.completions.create(
+        model=settings.FORUM_HOST_MODEL_NAME,  # Qwen3-235B
+        messages=[{"role": "user", "content": prompt}],
+        temperature=0.7
+    )
+
+    return response.choices[0].message.content
+```
+
+#### 主持人Prompt设计解析
+
+**为什么这样设计Prompt？**
+
+```
+【设计原则1】明确角色定位
+   "你是一个舆情分析团队的主持人"
+   → 让LLM理解自己是协调者，不是执行者
+
+【设计原则2】提供上下文
+   "以下是各个研究员最近的发现：..."
+   → 给出所有Agent的发言，让主持人有全局视角
+
+【设计原则3】明确任务
+   "总结、分析、指出、给出建议"
+   → 4个明确的任务，避免LLM发散
+
+【设计原则4】结构化输出
+   "【重要发现】【关联分析】【研究建议】"
+   → 强制结构化，方便Agent解析
+```
+
+#### 主持人LLM的输出示例
+
+```markdown
+【重要发现】
+1. QueryEngine在微博发现"樱花季"成为近期热点话题
+2. MediaEngine分析了大量短视频，发现"武大樱花"相关内容激增
+3. InsightEngine查询数据库，发现"樱花季"相关讨论量同比增长300%
+
+【关联分析】
+三个研究员的发现高度一致，共同指向"樱花季"是武汉大学近期最核心的舆情话题。
+网络热度（QueryEngine）、多媒体内容（MediaEngine）、历史数据对比（InsightEngine）
+三方面证据相互印证，说明这是真实且显著的舆情现象。
+
+【研究建议】
+1. 建议InsightEngine按时间轴深入分析樱花季期间的舆情变化趋势
+2. 建议MediaEngine重点分析樱花相关视频的情感倾向（正面/负面）
+3. 建议QueryEngine搜索是否有与樱花季相关的负面事件或争议
+```
+
+### 3.5 代码剖析：`utils/forum_reader.py`
+
+#### Agent如何读取论坛内容？
+
+```python
+# 文件：utils/forum_reader.py（简化版）
+
+from pathlib import Path
+
+def read_forum_summary() -> str:
+    """
+    读取最新的论坛总结
+
+    Returns:
+        论坛总结文本，如果文件不存在则返回空字符串
+    """
+    forum_log_file = Path("logs/forum.log")
+
+    try:
+        with open(forum_log_file, "r", encoding="utf-8") as f:
+            content = f.read()
+        return content
+    except FileNotFoundError:
+        return "暂无论坛讨论"
+```
+
+#### Agent如何使用论坛内容？
+
+```python
+# 文件：InsightEngine/nodes/search_node.py（示例）
+
+from utils.forum_reader import read_forum_summary
+
+class FirstSearchNode:
+    def run(self, state):
+        # 读取论坛内容
+        forum_content = read_forum_summary()
+
+        # 构建包含论坛内容的Prompt
+        prompt = f"""
+你的任务：{state.user_query}
+
+团队论坛最新讨论：
+{forum_content}
+
+基于论坛中其他研究员的发现，请你：
+1. 避免重复他们已经搜索过的内容
+2. 深入挖掘他们提到的关键话题
+3. 补充他们遗漏的角度
+
+现在开始你的研究...
+"""
+
+        # 调用LLM执行搜索
+        response = self.llm_client.generate(prompt)
+        ...
+```
+
+**效果示例**：
+```
+【没有论坛机制时】
+InsightEngine: 我搜索"武汉大学"，找到1000条数据
+               （不知道樱花季是重点）
+
+【有论坛机制后】
+InsightEngine读取论坛：
+  "QueryEngine发现樱花季是热点"
+  "MediaEngine发现大量樱花视频"
+InsightEngine调整策略：
+  重点搜索"武汉大学 樱花季"相关数据
+  并按时间轴分析趋势
+  → ✅ 分析更有针对性，质量更高！
+```
+
+### 3.6 完整的一轮论坛协作流程
+
+#### 时间轴示意
+
+```
+【T=0分钟】系统启动
+├─ app.py启动Flask应用
+├─ 启动ForumEngine监控（后台线程）
+└─ 并行启动3个Agent
+
+【T=1分钟】各Agent开始工作
+├─ QueryEngine: 执行SearchNode,搜索"武汉大学"
+├─ MediaEngine: 执行SearchNode,搜索相关视频
+└─ InsightEngine: 执行SearchNode,查询数据库
+
+【T=2分钟】QueryEngine首次总结
+├─ 执行FirstSummaryNode
+├─ 写入日志:
+│   "INFO | QueryEngine.nodes.summary_node - 正在生成首次段落总结"
+│   "【总结】我发现微博热搜中'樱花季'是热点"
+└─ ForumEngine监控到 → 提取发言 → buffer[1/5]
+
+【T=3分钟】MediaEngine首次总结
+├─ 执行FirstSummaryNode
+├─ 写入日志:
+│   "【总结】短视频平台大量'武大樱花'相关内容"
+└─ ForumEngine监控到 → 提取发言 → buffer[2/5]
+
+【T=4分钟】InsightEngine首次总结
+├─ 执行FirstSummaryNode
+├─ 写入日志:
+│   "【总结】数据库显示'樱花季'讨论量同比增长300%"
+└─ ForumEngine监控到 → 提取发言 → buffer[3/5]
+
+【T=5分钟】QueryEngine反思总结
+├─ 执行ReflectionSummaryNode（第1轮反思）
+├─ 写入日志:
+│   "【反思】发现樱花季期间有预约制度相关讨论"
+└─ ForumEngine监控到 → 提取发言 → buffer[4/5]
+
+【T=6分钟】MediaEngine反思总结
+├─ 执行ReflectionSummaryNode
+├─ 写入日志:
+│   "【反思】视频评论中有对预约制度的抱怨"
+└─ ForumEngine监控到 → 提取发言 → buffer[5/5]
+
+【T=6分30秒】触发主持人LLM！
+├─ buffer已满5条
+├─ 调用generate_host_speech()
+├─ LLM分析5条发言
+├─ 生成总结:
+│   【重要发现】樱花季是核心话题
+│   【关联分析】预约制度引发争议
+│   【研究建议】深入分析预约制度舆情
+└─ 写入logs/forum.log
+
+【T=7分钟】各Agent读取论坛
+├─ InsightEngine调用read_forum_summary()
+│   └─ 发现："深入分析预约制度舆情"
+│   └─ 调整策略：重点搜索"预约制度"相关评论
+├─ QueryEngine读取论坛
+│   └─ 调整策略：搜索"樱花预约"相关新闻
+└─ MediaEngine读取论坛
+    └─ 调整策略：分析预约相关视频
+
+【T=8-12分钟】第2轮深度研究
+└─ 各Agent基于论坛建议进行针对性研究
+    └─ 再次触发总结 → 再次生成论坛讨论
+        └─ 循环迭代...
+
+【T=15分钟】完成3轮迭代
+└─ ReportEngine收集所有结果 → 生成报告
+```
+
+---
+
+## 🤖 第四阶段：InsightEngine深度剖析（⭐ 核心）
+
+> **为什么先讲InsightEngine？**
+> 1. 它是功能最复杂、工具最多的Agent
+> 2. 最能体现Agent的设计思想（Node节点设计、工具调用、反思机制）
+> 3. 掌握InsightEngine后，其他Agent的理解会变得容易
+
+### 4.1 InsightEngine概览
+
+#### 核心职责
+
+**从私有舆情数据库中挖掘深度信息**
+
+```
+┌─────────────────────────────────────┐
+│     InsightEngine的独特价值          │
+├─────────────────────────────────────┤
+│ ✅ 访问私有数据库（其他Agent做不到）  │
+│ ✅ 查询历史数据（对比趋势）           │
+│ ✅ 情感分析（判断舆论倾向）           │
+│ ✅ 获取大众评论（了解真实声音）       │
+│ ✅ 跨平台对比（微博vs小红书vs抖音）   │
+└─────────────────────────────────────┘
+```
+
+#### 工具箱（6大核心工具）
+
+| 工具名称 | 功能描述 | SQL示例 | 使用场景 |
+|---------|---------|--------|---------|
+| `search_hot_content` | 搜索热榜内容 | `SELECT * FROM hot_content WHERE...` | 了解当前热点 |
+| `search_topic_globally` | 全局话题搜索 | `SELECT * FROM topics WHERE title LIKE '%关键词%'` | 查找相关话题 |
+| `search_topic_by_date` | 按日期搜索 | `WHERE date BETWEEN '2025-01-01' AND '2025-01-31'` | 分析时间趋势 |
+| `get_comments_for_topic` | 获取话题评论 | `SELECT * FROM comments WHERE topic_id=xxx` | 深入了解观点 |
+| `search_topic_on_platform` | 平台定向搜索 | `WHERE platform='weibo'` | 对比平台差异 |
+| `sentiment_analyzer` | 情感分析 | （调用ML模型） | 判断正负面情绪 |
+
+### 4.2 内部架构：Node节点设计
+
+#### 什么是Node节点？
+
+**Node**（节点）是Agent内部的**处理单元**，每个Node负责一个特定的任务。
+
+**类比**：工厂流水线
+```
+原材料 → 【切割Node】→ 【打磨Node】→ 【组装Node】→ 【检测Node】→ 成品
+
+用户查询 → 【规划Node】→ 【搜索Node】→ 【总结Node】→ 【反思Node】→ 最终报告
+```
+
+#### InsightEngine的Node流水线
+
+```
+┌──────────────────────────────────────────────────┐
+│        InsightEngine 节点流水线                   │
+└──────────────────────────────────────────────────┘
+
+输入：用户查询（例如："分析武汉大学舆情"）
+  ↓
+┌───────────────────────────────────────┐
+│ Node 1: ReportStructureNode           │
+│ 作用：理解需求，制定研究大纲           │
+│ 输出：{"topic": "武汉大学",           │
+│        "search_plan": [...]}          │
+└───────────────┬───────────────────────┘
+                ↓
+┌───────────────────────────────────────┐
+│ Node 2: FirstSearchNode               │
+│ 作用：执行初次搜索                     │
+│ 方法：调用工具箱中的搜索工具           │
+│ 输出：原始搜索结果（数百条数据）       │
+└───────────────┬───────────────────────┘
+                ↓
+┌───────────────────────────────────────┐
+│ Node 3: FirstSummaryNode              │
+│ 作用：总结首次搜索的关键信息           │
+│ 输出：结构化总结（重点话题、热度分析） │
+│ 📝 会写入【论坛发言】供其他Agent读取   │
+└───────────────┬───────────────────────┘
+                ↓
+┌───────────────────────────────────────┐
+│ Node 4: ReflectionNode                │
+│ 作用：反思当前结果，决定是否需要补充   │
+│ 输出：{"need_more": True/False,       │
+│        "suggestions": [...]}          │
+└───────────────┬───────────────────────┘
+                ↓
+         需要补充？
+       ┌───No────┐
+       ↓         ↓Yes
+     结束    ┌───────────────────────────────────┐
+             │ Node 5: ReflectionSearchNode      │
+             │ 作用：基于反思建议进行补充搜索     │
+             └───────────┬───────────────────────┘
+                         ↓
+             ┌───────────────────────────────────┐
+             │ Node 6: ReflectionSummaryNode     │
+             │ 作用：总结补充搜索的发现           │
+             │ 📝 再次写入【论坛发言】            │
+             └───────────┬───────────────────────┘
+                         ↓
+                    循环2-3轮
+                         ↓
+             ┌───────────────────────────────────┐
+             │ Node 7: ReportFormattingNode      │
+             │ 作用：格式化最终报告               │
+             │ 输出：Markdown格式的分析报告       │
+             └───────────────────────────────────┘
+```
+
+### 4.3 代码剖析：`InsightEngine/agent.py`
+
+#### 核心类：DeepSearchAgent
+
+**初始化方法：__init__()**
+
+```python
+# 文件：InsightEngine/agent.py（基于真实代码）
+
+class DeepSearchAgent:
+    """Deep Search Agent主类"""
+
+    def __init__(self, config: Optional[Settings] = None):
+        """初始化Agent"""
+        self.config = config or settings
+
+        # 1. 初始化LLM客户端（大脑）
+        self.llm_client = LLMClient(
+            api_key=self.config.INSIGHT_ENGINE_API_KEY,
+            model_name=self.config.INSIGHT_ENGINE_MODEL_NAME,
+            base_url=self.config.INSIGHT_ENGINE_BASE_URL,
+        )
+
+        # 2. 初始化搜索工具集（工具箱）
+        self.search_agency = MediaCrawlerDB()  # 数据库查询工具
+
+        # 3. 初始化情感分析器
+        self.sentiment_analyzer = multilingual_sentiment_analyzer
+
+        # 4. 初始化所有节点（流水线）
+        self.first_search_node = FirstSearchNode(self.llm_client)
+        self.reflection_node = ReflectionNode(self.llm_client)
+        self.first_summary_node = FirstSummaryNode(self.llm_client)
+        self.reflection_summary_node = ReflectionSummaryNode(self.llm_client)
+        self.report_formatting_node = ReportFormattingNode(self.llm_client)
+
+        # 5. 初始化状态
+        self.state = State()  # 存储中间结果
+
+        logger.info("Insight Agent已初始化")
+        logger.info(f"使用LLM: {self.llm_client.get_model_info()}")
+        logger.info("搜索工具集: MediaCrawlerDB (支持5种数据库查询工具)")
+        logger.info("情感分析: WeiboMultilingualSentiment (支持22种语言)")
+```
+
+**组成部分解析**：
+```
+DeepSearchAgent
+├─ llm_client         ← 大脑（决策中心）
+├─ search_agency      ← 工具箱（执行能力）
+├─ sentiment_analyzer ← 专业分析能力
+├─ 各种Node节点        ← 处理流水线
+└─ state              ← 记忆（存储中间结果）
+```
+
+#### 核心方法：execute_search_tool()
+
+**作用**：执行数据库查询工具（并集成关键词优化和情感分析）
+
+```python
+def execute_search_tool(self, tool_name: str, query: str, **kwargs) -> DBResponse:
+    """
+    执行指定的数据库查询工具
+
+    Args:
+        tool_name: 工具名称，如"search_topic_globally"
+        query: 搜索关键词，如"武汉大学"
+        **kwargs: 额外参数（日期范围、平台、限制数量等）
+
+    Returns:
+        DBResponse对象（包含搜索结果和情感分析）
+    """
+    logger.info(f"  → 执行数据库查询工具: {tool_name}")
+
+    # 🔑 关键步骤1：关键词优化
+    # 为什么需要？用户输入"武汉大学"，但数据库中可能是"武大"、"WHU"
+    optimized_response = keyword_optimizer.optimize_keywords(
+        original_query=query,
+        context=f"使用{tool_name}工具进行查询"
+    )
+
+    logger.info(f"  🔍 原始查询: '{query}'")
+    logger.info(f"  ✨ 优化后关键词: {optimized_response.optimized_keywords}")
+    # 输出示例：['武汉大学', '武大', 'WHU', 'Wuhan University']
+
+    # 🔑 关键步骤2：使用优化后的关键词进行多次查询
+    all_results = []
+    for keyword in optimized_response.optimized_keywords:
+        logger.info(f"    查询关键词: '{keyword}'")
+
+        if tool_name == "search_topic_globally":
+            # 全局搜索
+            response = self.search_agency.search_topic_globally(
+                topic=keyword,
+                limit_per_table=self.config.DEFAULT_SEARCH_TOPIC_GLOBALLY_LIMIT_PER_TABLE
+            )
+        elif tool_name == "get_comments_for_topic":
+            # 获取评论
+            response = self.search_agency.get_comments_for_topic(
+                topic=keyword,
+                limit=self.config.DEFAULT_GET_COMMENTS_FOR_TOPIC_LIMIT
+            )
+        # ... 其他工具类似 ...
+
+        if response.results:
+            logger.info(f"     找到 {len(response.results)} 条结果")
+            all_results.extend(response.results)
+
+    # 🔑 关键步骤3：去重
+    unique_results = self._deduplicate_results(all_results)
+    logger.info(f"  总计找到 {len(all_results)} 条，去重后 {len(unique_results)} 条")
+
+    # 🔑 关键步骤4：情感分析
+    sentiment_analysis = self._perform_sentiment_analysis(unique_results)
+    logger.info(f"  🎭 情感分析完成")
+
+    # 构建最终响应
+    return DBResponse(
+        tool_name=f"{tool_name}_optimized",
+        parameters={
+            "original_query": query,
+            "optimized_keywords": optimized_response.optimized_keywords,
+            "sentiment_analysis": sentiment_analysis
+        },
+        results=unique_results,
+        results_count=len(unique_results)
+    )
+```
+
+**流程图解**：
+```
+execute_search_tool("search_topic_globally", "武汉大学")
+         ↓
+【步骤1】关键词优化
+         keyword_optimizer.optimize_keywords("武汉大学")
+         ↓
+         返回：['武汉大学', '武大', 'WHU', 'Wuhan University']
+         ↓
+【步骤2】多关键词查询
+         for '武汉大学': 找到150条
+         for '武大': 找到120条
+         for 'WHU': 找到30条
+         for 'Wuhan University': 找到10条
+         总计：310条
+         ↓
+【步骤3】去重
+         _deduplicate_results()
+         ↓
+         去重后：200条（去除重复的110条）
+         ↓
+【步骤4】情感分析
+         _perform_sentiment_analysis(200条数据)
+         ↓
+         结果：正面75%、负面15%、中性10%
+         ↓
+【输出】DBResponse对象
+         包含：200条结果 + 情感分析数据
+```
+
+**为什么这样设计？**
+```
+优势1：关键词优化 → 提高召回率
+  用户只输入"武汉大学"，但数据库中可能用简称"武大"
+  通过关键词优化，能找到更多相关数据
+
+优势2：多关键词查询 → 全面覆盖
+  不同关键词可能匹配不同的数据
+  整合所有结果，避免遗漏
+
+优势3：去重 → 提高质量
+  不同关键词可能查到同一条数据
+  去重后避免重复分析
+
+优势4：自动情感分析 → 增加深度
+  不仅返回数据，还分析情感倾向
+  帮助LLM更好地理解舆情
+```
+
+### 4.4 Node节点详解
+
+#### Node 1: FirstSearchNode（首次搜索节点）
+
+**代码位置**：`InsightEngine/nodes/search_node.py`
+
+**作用**：根据研究计划执行首次搜索
+
+**伪代码**：
+```python
+class FirstSearchNode:
+    def run(self, state):
+        """执行首次搜索"""
+        # 1. 读取论坛内容（如果有）
+        forum_content = read_forum_summary()
+
+        # 2. 构建Prompt
+        prompt = f"""
+你的任务：{state.user_query}
+研究计划：{state.research_plan}
+
+团队论坛讨论：
+{forum_content}
+
+请根据研究计划执行搜索，使用以下工具：
+- search_topic_globally(topic="关键词")
+- get_comments_for_topic(topic="关键词")
+- ...
+
+输出JSON格式的工具调用序列
+"""
+
+        # 3. LLM生成工具调用计划
+        tool_calls = self.llm_client.generate_tool_calls(prompt)
+
+        # 4. 执行工具调用
+        for tool_call in tool_calls:
+            result = self.agent.execute_search_tool(
+                tool_name=tool_call['name'],
+                query=tool_call['query'],
+                **tool_call.get('params', {})
+            )
+            state.search_results.append(result)
+
+        return state
+```
+
+#### Node 2: FirstSummaryNode（首次总结节点）
+
+**代码位置**：`InsightEngine/nodes/summary_node.py`
+
+**作用**：总结首次搜索的关键发现（并写入论坛）
+
+**伪代码**：
+```python
+class FirstSummaryNode:
+    def run(self, state):
+        """生成首次总结"""
+        logger.info("正在生成首次段落总结")  # ← ForumEngine监控此行
+
+        # 1. 整合所有搜索结果
+        all_results = self._format_results(state.search_results)
+
+        # 2. 构建Prompt
+        prompt = f"""
+你刚刚完成了关于"{state.user_query}"的首次搜索，找到了以下数据：
+
+{all_results}
+
+请总结：
+1. 核心话题是什么？
+2. 热度如何？
+3. 主要讨论点是什么？
+4. 情感倾向如何？
+"""
+
+        # 3. LLM生成总结
+        summary = self.llm_client.generate(prompt)
+
+        # 4. 🔑 写入论坛发言（关键！）
+        logger.info(f"【论坛发言】InsightEngine首次总结：{summary}")
+
+        # 5. 存入state
+        state.summaries.append(summary)
+
+        return state
+```
+
+**为什么要写入【论坛发言】？**
+```
+当logger.info("【论坛发言】...")时：
+1. 写入logs/insight.log文件
+2. ForumEngine监控到这条日志
+3. 提取发言内容
+4. 加入agent_speeches_buffer
+5. 当buffer满5条时，触发主持人LLM
+6. 主持人生成总结，写入forum.log
+7. 其他Agent读取forum.log，了解InsightEngine的发现
+```
+
+#### Node 3: ReflectionNode（反思节点）
+
+**作用**：评估当前结果质量，决定是否需要补充搜索
+
+**伪代码**：
+```python
+class ReflectionNode:
+    def run(self, state):
+        """反思当前结果"""
+        # 1. 读取最新论坛内容
+        forum_content = read_forum_summary()
+
+        # 2. 构建Prompt
+        prompt = f"""
+你刚刚完成了首次搜索和总结：
+{state.summaries[-1]}
+
+团队论坛最新讨论：
+{forum_content}
+
+请反思：
+1. 当前结果是否足够全面？
+2. 是否遗漏了重要角度？
+3. 论坛中其他Agent提到了哪些我没有搜索的方向？
+4. 是否需要补充搜索？
+
+输出JSON格式：
+{
+  "is_complete": true/false,
+  "missing_aspects": [...],
+  "suggestions": [...]
+}
+"""
+
+        # 3. LLM反思
+        reflection = self.llm_client.generate_json(prompt)
+
+        # 4. 存入state
+        state.reflections.append(reflection)
+
+        # 5. 决定是否继续
+        if reflection['is_complete']:
+            return "FINISH"  # 结束
+        else:
+            return "CONTINUE"  # 继续搜索
+```
+
+**反思机制的价值**：
+```
+【没有反思】
+Agent执行一次搜索 → 生成总结 → 结束
+可能遗漏重要信息
+
+【有反思】
+Agent执行搜索 → 生成总结 → 反思是否完整
+  → 发现遗漏 → 补充搜索 → 再次总结
+  → 再次反思 → ...
+  → 循环2-3轮，确保全面性
+```
+
+---
+
+## 🔥 第五阶段：其他三个Agent解析
+
+### 5.1 QueryEngine（网络搜索Agent）
+
+#### 核心职责
+在国内外互联网上搜索相关新闻、讨论、文章
+
+#### 工具箱
+- **Tavily API**：国际搜索（Google、Bing等）
+- **Bocha API**：国内搜索（百度、搜狗等）
+- **网页内容提取**：Beautiful Soup、正则表达式
+
+#### 与InsightEngine的区别
+| 维度 | QueryEngine | InsightEngine |
+|------|------------|--------------|
+| 数据来源 | 互联网公开信息 | 私有数据库 |
+| 数据特点 | 非结构化文本 | 结构化数据 |
+| 查询方式 | 搜索API | SQL查询 |
+| 优势 | 信息广度、实时性 | 历史深度、精准性 |
+
+#### 简化的工作流程
+```
+QueryEngine.run("分析武汉大学舆情")
+  ↓
+1. 生成搜索关键词
+   LLM: "武汉大学"、"WHU"、"武汉大学 新闻"
+  ↓
+2. 调用Tavily API搜索
+   找到：15条新闻、10条社交媒体讨论
+  ↓
+3. 提取网页内容
+   使用BeautifulSoup解析HTML
+  ↓
+4. 总结关键信息
+   LLM总结：热点话题、舆论走向
+  ↓
+5. 写入【论坛发言】
+   供其他Agent参考
+```
+
+### 5.2 MediaEngine（多模态分析Agent）
+
+#### 核心职责
+分析图片、视频、音频等多模态内容
+
+#### 核心能力
+- **图片OCR**：提取图片中的文字
+- **视频理解**：分析视频内容、关键帧
+- **结构化信息提取**：天气卡片、日历、股票等
+
+#### 为什么需要独立的MediaEngine？
+```
+场景：分析某品牌舆情
+
+QueryEngine: 搜索到一篇文章，提到"某品牌新品发布会"
+             但文章中有大量产品图片
+             QueryEngine无法理解图片内容
+
+MediaEngine: 分析图片，识别出：
+             - 产品外观设计
+             - 产品特性（从图片文字提取）
+             - 现场观众反应（从视频分析）
+             → ✅ 补充了重要信息！
+```
+
+#### 简化的工作流程
+```
+MediaEngine.run("分析武汉大学舆情")
+  ↓
+1. 搜索相关多模态内容
+   调用搜索API，筛选图片、视频结果
+  ↓
+2. 调用多模态LLM（Gemini）
+   输入：图片URL、视频URL
+   Prompt："这张图片/视频在讨论什么？情感倾向如何？"
+  ↓
+3. 提取结构化信息
+   如果是信息卡片（天气、日历等），提取结构化数据
+  ↓
+4. 总结多模态内容
+   LLM总结：视频主题、图片情感、关键信息
+  ↓
+5. 写入【论坛发言】
+```
+
+### 5.3 ReportEngine（报告生成Agent）
+
+#### 核心职责
+收集所有Agent的分析结果，生成专业HTML报告
+
+#### 工作流程
+```
+ReportEngine.run()
+  ↓
+1. 收集所有Agent的结果
+   ├─ QueryEngine的网络搜索结果
+   ├─ MediaEngine的多模态分析
+   ├─ InsightEngine的数据库挖掘
+   └─ ForumEngine的论坛讨论记录
+  ↓
+2. 选择报告模板
+   根据任务类型（品牌分析/热点事件/政策影响）
+   从report_template/目录选择合适模板
+  ↓
+3. 多轮生成报告
+   第1轮：生成初稿
+   第2轮：检查质量，补充细节
+   第3轮：美化格式
+  ↓
+4. 输出HTML文件
+   使用Markdown转HTML
+   添加CSS样式
+   保存到final_reports/目录
+```
+
+#### 报告模板示例
+```markdown
+# {品牌名称}舆情分析报告
+
+## 一、舆情概览
+{综合热度分析}
+
+## 二、热点话题
+{核心话题列表}
+
+## 三、情感分析
+{正负面情绪分布}
+
+## 四、平台对比
+{不同平台的舆情差异}
+
+## 五、趋势预测
+{未来走向分析}
+```
+
+---
+
+## 🌟 第六阶段：完整协作流程实战
+
+### 6.1 案例：分析"武汉大学品牌声誉"
+
+#### 完整时间轴（真实流程）
+
+**【0:00】用户提问**
+```
+用户在Web界面输入："分析武汉大学品牌声誉"
+Flask app.py接收请求
+```
+
+**【0:05】系统初始化**
+```
+1. 启动ForumEngine监控（后台线程）
+2. 清空logs/forum.log
+3. 并行启动3个Agent：
+   ├─ QueryEngine（端口8503）
+   ├─ MediaEngine（端口8502）
+   └─ InsightEngine（端口8501）
+```
+
+**【0:10-2:00】初步搜索阶段**
+```
+QueryEngine:
+  ├─ 调用Tavily搜索"武汉大学"
+  ├─ 找到15条新闻、10条讨论
+  └─ 总结：排名上升、樱花季话题热度高
+
+MediaEngine:
+  ├─ 搜索相关视频
+  ├─ 分析了20个短视频
+  └─ 总结：樱花视频播放量高、评论正面
+
+InsightEngine:
+  ├─ search_topic_globally("武汉大学")
+  ├─ 找到500条历史数据
+  ├─ get_comments_for_topic() → 1000条评论
+  ├─ 情感分析：正面78%、负面12%、中性10%
+  └─ 总结：整体声誉良好，樱花季是核心话题
+```
+
+**【2:00】首次论坛总结触发**
+```
+ForumEngine检测到3个Agent的FirstSummaryNode：
+  ├─ QueryEngine: "樱花季是热点"
+  ├─ MediaEngine: "樱花视频很火"
+  └─ InsightEngine: "樱花讨论量增长300%"
+
+主持人LLM分析：
+  【重要发现】樱花季是核心话题
+  【关联分析】三方证据一致
+  【研究建议】深入分析樱花季舆情细节
+
+写入logs/forum.log
+```
+
+**【2:05-5:00】深度研究阶段（第1轮反思）**
+```
+各Agent读取论坛 → 调整策略：
+
+QueryEngine:
+  ├─ 搜索"武汉大学 樱花季"
+  ├─ 发现"预约制度"相关讨论
+  └─ 总结：预约制度引发部分争议
+
+MediaEngine:
+  ├─ 重点分析樱花视频
+  ├─ 提取评论情感
+  └─ 总结：评论中有对预约制度的抱怨
+
+InsightEngine:
+  ├─ search_topic_on_platform(platform="weibo", topic="樱花预约")
+  ├─ 找到200条相关讨论
+  ├─ 情感分析：负面比例上升到30%
+  └─ 总结：预约制度是潜在舆情风险点
+```
+
+**【5:00】第2轮论坛总结**
+```
+ForumEngine检测到3个Agent的ReflectionSummaryNode：
+  ├─ QueryEngine: "预约制度有争议"
+  ├─ MediaEngine: "视频评论有抱怨"
+  └─ InsightEngine: "负面情绪上升"
+
+主持人LLM分析：
+  【重要发现】预约制度是双刃剑
+  【关联分析】便利性vs公平性的矛盾
+  【研究建议】深入分析负面评论的具体原因
+
+写入logs/forum.log
+```
+
+**【5:05-8:00】深度研究阶段（第2轮反思）**
+```
+InsightEngine:
+  ├─ get_comments_for_topic(topic="樱花预约")
+  ├─ 提取高情感强度的负面评论
+  ├─ LLM分析评论主题
+  └─ 总结：主要抱怨点：
+      1. 预约系统崩溃
+      2. 外地游客难以预约
+      3. 黄牛倒卖预约名额
+```
+
+**【8:00-10:00】收敛阶段**
+```
+各Agent完成2-3轮反思，结果趋于稳定
+ForumEngine停止监控
+ReportEngine开始工作
+```
+
+**【10:00-12:00】报告生成**
+```
+ReportEngine:
+  1. 收集所有Agent的结果
+     ├─ QueryEngine: 网络热度分析
+     ├─ MediaEngine: 视频内容分析
+     └─ InsightEngine: 数据库深度挖掘
+
+  2. 读取论坛讨论记录
+     了解各Agent的发现和协作过程
+
+  3. 选择模板
+     任务类型判断为"品牌声誉监测"
+     → 使用"商业品牌舆情监测.md"模板
+
+  4. 多轮生成
+     第1轮：生成初稿
+     第2轮：补充细节
+     第3轮：美化格式
+
+  5. 输出HTML
+     保存到：final_reports/武汉大学品牌声誉_20250115.html
+```
+
+**【12:00】完成！**
+```
+用户在Web界面看到：
+  ✅ 分析完成
+  ✅ 点击下载报告
+  ✅ 查看详细分析结果
+```
+
+### 6.2 关键协作时刻
+
+#### 时刻1：避免重复劳动
+```
+QueryEngine发现："樱花季是热点"
+写入论坛 → InsightEngine读取
+InsightEngine策略调整：
+  ❌ 不再全局搜索"武汉大学"
+  ✅ 重点搜索"武汉大学 樱花季"
+  → 避免了重复工作！
+```
+
+#### 时刻2：交叉验证
+```
+QueryEngine: "樱花季热度高"（来自网络搜索）
+MediaEngine: "樱花视频很火"（来自视频分析）
+InsightEngine: "樱花讨论量增长300%"（来自数据库）
+  → 三方证据相互印证 → 结论可信度高！
+```
+
+#### 时刻3：补充遗漏
+```
+QueryEngine和MediaEngine都发现了"樱花季"
+但InsightEngine深入数据库后发现：
+  "预约制度"是潜在风险点
+  → 提醒其他Agent关注这个角度
+  → MediaEngine重新分析视频评论
+  → QueryEngine补充搜索预约制度相关新闻
+  → 发现了原本会遗漏的重要信息！
+```
+
+---
+
+## 📚 附录：辅助知识（简化版）
+
+### 附录A：LLM技术基础
+
+#### 什么是LLM？
+大语言模型（Large Language Model），能理解和生成人类语言的AI模型
+
+#### BettaFish如何使用LLM？
+- **统一接口**：所有LLM调用都使用OpenAI兼容格式
+- **配置方式**：在`.env`文件中配置API密钥和模型名称
+- **调用示例**：
+  ```python
+  from openai import OpenAI
+  client = OpenAI(api_key="...", base_url="...")
+  response = client.chat.completions.create(
+      model="model-name",
+      messages=[{"role": "user", "content": "prompt"}]
+  )
+  ```
+
+#### 如何配置不同的LLM？
+编辑`.env`文件：
+```bash
+# InsightEngine使用Kimi
+INSIGHT_ENGINE_API_KEY=sk-xxx
+INSIGHT_ENGINE_BASE_URL=https://api.moonshot.cn/v1
+INSIGHT_ENGINE_MODEL_NAME=kimi-k2-0711-preview
+
+# MediaEngine使用Gemini
+MEDIA_ENGINE_API_KEY=xxx
+MEDIA_ENGINE_BASE_URL=https://aihubmix.com/v1
+MEDIA_ENGINE_MODEL_NAME=gemini-2.5-pro
+```
+
+### 附录B：爬虫技术基础
+
+#### 什么是爬虫？
+自动化程序，模拟人类浏览网页，批量收集数据
+
+#### BettaFish的爬虫：MindSpider
+- **位置**：`MindSpider/`目录
+- **技术栈**：Playwright（支持JavaScript渲染）
+- **支持平台**：微博、小红书、抖音、快手
+- **两大模块**：
+  1. BroadTopicExtraction：热点话题提取
+  2. DeepSentimentCrawling：深度舆情爬取
+
+#### 如何使用爬虫？
 ```bash
 cd MindSpider
-python main.py --setup              # 初始化
-python main.py --broad-topic        # 爬取热点话题
-python main.py --deep-sentiment --platforms wb  # 深度爬取微博
+python main.py --setup                    # 初始化
+python main.py --broad-topic              # 爬取热点
+python main.py --deep-sentiment --platforms wb  # 爬取微博
 ```
 
----
+**注意**：爬虫仅供学习研究，请遵守法律法规和网站robots.txt协议
 
-## 📖 学习资源推荐
+### 附录C：数据库设计
 
-### 推荐阅读顺序
-1. **先读文档**：`README.md`（项目概述）
-2. **再看架构**：`app.py`（入口文件）
-3. **深入Agent**：从`InsightEngine/agent.py`开始
-4. **理解工具**：`InsightEngine/tools/search.py`
-5. **学习协作**：`ForumEngine/monitor.py`
+#### 核心表结构
+- **hot_content**：热榜内容表
+- **topics**：话题表
+- **comments**：评论表
+- **platform_data**：平台数据表
 
-### 相关技术学习
-- **Flask**：https://flask.palletsprojects.com/
-- **Streamlit**：https://docs.streamlit.io/
-- **LangGraph**（类似架构）：https://langchain-ai.github.io/langgraph/
-- **Playwright**：https://playwright.dev/python/
+#### 支持的数据库
+- PostgreSQL（推荐）
+- MySQL
 
----
-
-## ❓ 常见问题预设
-
-### Q1: 为什么要用多Agent而不是单个LLM？
-**A**：单个LLM容易产生"思维局限"和"信息茧房"，多Agent通过不同工具和视角，能产生更全面、更客观的分析。
-
-### Q2: 论坛协作机制的意义是什么？
-**A**：让不同Agent的发现互相启发，避免重复劳动，提高分析深度。就像团队开会讨论，比单打独斗更高效。
-
-### Q3: 为什么需要那么多LLM模型？
-**A**：不同模型有不同优势：
-- Kimi长上下文能力强
-- Gemini多模态能力强
-- DeepSeek推理能力强
-- Qwen中文理解好
-
-### Q4: 如何降低API成本？
-**A**：
-- 使用国内中转服务（价格更低）
-- 优化Prompt减少token消耗
-- 使用小参数模型处理简单任务
-- 缓存重复查询结果
+#### 配置方式
+编辑`.env`文件：
+```bash
+DB_HOST=localhost
+DB_PORT=5432
+DB_USER=bettafish
+DB_PASSWORD=bettafish
+DB_NAME=bettafish
+DB_DIALECT=postgresql
+```
 
 ---
 
 ## 🎓 学习检查清单
 
-完成以下清单，说明你已经掌握了BettaFish项目！
+### 理论理解
+- [ ] 能解释什么是多智能体系统
+- [ ] 能说明为什么需要多Agent而不是单Agent
+- [ ] 理解并行模式vs协作模式的区别
+- [ ] 能画出BettaFish的整体架构图
 
-### 基础理解（第1-3阶段）
-- [ ] 能用自己的话解释什么是多智能体系统
-- [ ] 能画出系统架构图
-- [ ] 理解论坛协作机制的工作原理
-- [ ] 知道四个Agent的职责分工
+### 论坛机制
+- [ ] 理解论坛协作机制的设计动机
+- [ ] 能解释ForumEngine的监控原理
+- [ ] 知道为什么监控SummaryNode
+- [ ] 理解file_positions的作用
+- [ ] 能说明主持人LLM的职责
 
-### 代码理解（第4阶段）
-- [ ] 能读懂`app.py`主流程
-- [ ] 理解任意一个Agent的代码结构
-- [ ] 知道LLM如何被调用
-- [ ] 理解数据库查询逻辑
+### Agent深度理解
+- [ ] 理解InsightEngine的6大工具
+- [ ] 能解释Node节点设计的意义
+- [ ] 知道关键词优化的作用
+- [ ] 理解反思机制的价值
+- [ ] 能说明情感分析的实现方式
 
-### 实战能力（第5-6阶段）
-- [ ] 成功搭建开发环境
-- [ ] 运行过完整分析流程
-- [ ] 尝试修改配置参数
-- [ ] 能接入自定义数据源
-- [ ] 能创建自定义报告模板
+### 代码能力
+- [ ] 能读懂`ForumEngine/monitor.py`的核心逻辑
+- [ ] 能读懂`InsightEngine/agent.py`的execute_search_tool()
+- [ ] 理解Agent如何写入【论坛发言】
+- [ ] 理解Agent如何读取论坛内容
+- [ ] 能追踪一次完整的协作流程
 
-### 高级能力（可选）
-- [ ] 添加新的搜索工具
-- [ ] 开发新的Agent
-- [ ] 优化情感分析模型
-- [ ] 扩展爬虫支持新平台
+### 实战能力
+- [ ] 能搭建开发环境
+- [ ] 能运行完整分析流程
+- [ ] 能读懂日志文件中的协作过程
+- [ ] 能修改Agent的配置参数
+- [ ] 能尝试添加新的搜索工具
 
 ---
 
-## 📝 学习建议
+## 📖 学习建议
 
-### 时间规划
-- **第1-2阶段**：2-3天（理论学习）
-- **第3阶段**：1-2天（架构理解）
-- **第4阶段**：5-7天（代码深入，每个Agent 1-2天）
-- **第5阶段**：3-5天（技术细节）
-- **第6阶段**：根据实践项目而定
+### 学习顺序
+1. **第1-2天**：理论基础（第一、二阶段）
+2. **第3-6天**：论坛机制深度理解（第三阶段）
+   - 重点阅读`ForumEngine/monitor.py`代码
+   - 运行系统，观察日志文件变化
+3. **第7-12天**：InsightEngine深度学习（第四阶段）
+   - 逐个理解每个Node
+   - 尝试修改工具调用逻辑
+4. **第13-18天**：其他Agent学习（第五阶段）
+5. **第19-22天**：完整流程实战（第六阶段）
 
 ### 学习方法
-1. **先整体后局部**：不要一开始就陷入代码细节
-2. **动手实践**：看懂≠会用，一定要运行起来
-3. **问题驱动**：遇到不懂的先记录，再集中解决
-4. **对比学习**：对比不同Agent的实现，理解设计思路
-5. **扩展练习**：尝试改造成其他领域的分析系统
+1. **代码+日志结合**：边读代码，边看日志文件
+2. **画图理解**：用流程图梳理逻辑
+3. **动手修改**：尝试调整参数，观察变化
+4. **追踪一次流程**：从用户提问到报告生成，完整追踪
+5. **问题驱动**：遇到疑问立即查代码验证
+
+### 推荐工具
+- **VSCode**：代码阅读
+- **Draw.io**：画架构图
+- **Postman**：测试API
+- **DB Browser**：查看数据库
 
 ---
 
-## 🚀 准备好了吗？
+## 🎉 结语
 
-**下一步**：请告诉我你是否同意这个学习大纲？
-- 如果同意，我们从**第一阶段**开始深入学习！
-- 如果有调整建议，请告诉我你更关注哪些部分！
+**恭喜你！**完成这份学习指南后，你将：
+- ✅ 深入理解多智能体协作机制
+- ✅ 掌握BettaFish的核心设计思想
+- ✅ 能够基于此架构开发自己的Agent系统
+- ✅ 具备扩展和定制能力
 
-**我的承诺**：
-- 每个知识点都会用"大白话+专业术语"讲解
-- 遇到复杂逻辑会画流程图
-- 关键代码会逐行剖析
-- 随时欢迎你的提问！
+**下一步行动**：
+1. 同意这份学习指南 → 我们开始详细讲解
+2. 或者告诉我你想重点学习哪个部分 → 我深入展开
 
-让我们一起攻克这个项目吧！💪
+**学习过程中随时提问！**我会用：
+- 🗣️ 大白话解释原理
+- 📊 流程图展示逻辑
+- 💻 代码示例说明实现
+- ❓ 问答方式帮你理解
+
+让我们一起攻克这个精彩的多智能体系统！🚀
